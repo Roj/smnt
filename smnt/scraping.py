@@ -11,7 +11,7 @@ WEATHER_URL = "https://ws1.smn.gob.ar/v1/weather/location/zoom/2"
 
 def get_jwt_token():
     html_pronostico = requests.get(url_pronostico).content
-    obj = re.search("localStorage\.setItem\('token', '([A-z0-9\.]+)'\);", html_pronostico.decode("utf-8"))
+    obj = re.search("localStorage\.setItem\('token', '([A-z0-9\.\-]+)'\);", html_pronostico.decode("utf-8"))
     jwt = obj.group(1)
     return jwt
 
