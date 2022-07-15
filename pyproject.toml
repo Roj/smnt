@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "smnt"
+version = "0.1.0"
+description = "SMN or SMN't?"
+authors = ["Joaquin Torre <joa.dev@live.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pandas = "^1.4.3"
+requests = "^2.28.1"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.14.4"
+isort = "^5.10.1"
+black = "^22.6.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
