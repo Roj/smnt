@@ -20,16 +20,24 @@ def query_endpoint_with_jwt(endpoint, jwt):
     response = requests.get(endpoint, headers={"Authorization": auth_header, "Accept": "application/json"})
     return json.loads(response.content.decode("utf-8"))
 
+def get_forecast(jwt):
+    forecast_data = query_endpoint_with_jwt(FORECAST_URL, jwt)
+    forecast_df = pd.DataFrame(forecast_data["forecast"])
+    return forecast_df
+
+def get_current_weather(jwt, location=LOCATION_ID):
+    now = query_endpoint_with_jwt(WEATHER_URL, jwt)
+    df_now = pd.DataFrame(now)
+    df_now["location_name"] = df_now.location.map(lambda loc: loc["name"])
+    df_now["location_id"] = df_now.location.map(lambda loc: loc["id"])
+    caba_ahora = df_now.loc[df_now.location_id == location]
+    return caba_ahora    
 
 def run_etl():
     jwt = get_jwt_token()
-    forecast_data = query_endpoint_with_jwt(FORECAST_URL, jwt)
-    forecast_df = pd.DataFrame(forecast_data["forecast"])
+    
+    forecast_df = get_forecast(jwt)
+    current_weather = get_current_weather(jwt)
     # TODO: convert forecast_df rows to the models
-
-    now = query_endpoint_with_jwt(WEATHER_URL, jwt)
-    df_now = pd.DataFrame(now.content)
-    df_now["location_name"] = df_now.location.map(lambda loc: loc["name"])
-    df_now["location_id"] = df_now.location.map(lambda loc: loc["id"])
-    caba_ahora = df_now.loc[df_now.location_id == 10821]
+    
     # TODO: convert to model
