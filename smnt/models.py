@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Float, DateTime, Date, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 class PeriodPrediction(Base):
@@ -10,6 +11,7 @@ class PeriodPrediction(Base):
     predicted_date = Column(Date)
     period_name = Column(String)
     day_prediction_id = Column(Integer, ForeignKey("day_prediction.id"))
+    day_prediction = relationship("DayPrediction")
     # Values
     humidity = Column(Float)
     probability_rain_min = Column(Float)
@@ -34,10 +36,7 @@ class DayPrediction(Base):
     temperature_max = Column(Float)
     humidity_min = Column(Float)
     humidity_max = Column(Float)
-    early_morning = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
-    morning = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
-    afternoon = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
-    night = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
+    period_predictions = relationship("PeriodPrediction", back_populates="day_prediction")
 
 
 class ActualWeather(Base):
