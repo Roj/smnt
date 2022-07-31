@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 class PeriodPrediction(Base):
+    """A prediction for a single period (early morning, morning, ...)"""
     __tablename__ = "period_prediction"
     id = Column(Integer, primary_key=True)
     # Identifying info
@@ -27,6 +28,7 @@ class PeriodPrediction(Base):
     wind_speed_max = Column(Float)
 
 class DayPrediction(Base):
+    """A prediction for a whole day, including its periods predictions"""
     __tablename__ = "day_prediction"
     id = Column(Integer, primary_key=True)
     datetime = Column(DateTime)
@@ -40,6 +42,7 @@ class DayPrediction(Base):
 
 
 class ActualWeather(Base):
+    """Actual weather for the datehour."""
     __tablename__ = "actual_weather"
     id = Column(Integer, primary_key=True)
     datehour = Column(DateTime)
