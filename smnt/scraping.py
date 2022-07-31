@@ -2,15 +2,10 @@ import re
 import requests
 import json
 import pandas as pd
-
-LOCATION_ID = 10821 # CABA
-url_pronostico = "https://www.smn.gob.ar/pronostico/?loc=10821"
-FORECAST_URL = "https://ws1.smn.gob.ar/v1/forecast/location/10821"
-WEATHER_URL = "https://ws1.smn.gob.ar/v1/weather/location/zoom/2"
-
+from smnt.config import LOCATION_ID, FORECAST_URL, WEATHER_URL, JWT_URL
 
 def get_jwt_token():
-    html_pronostico = requests.get(url_pronostico).content
+    html_pronostico = requests.get(JWT_URL).content
     obj = re.search("localStorage\.setItem\('token', '([A-z0-9\.\-]+)'\);", html_pronostico.decode("utf-8"))
     jwt = obj.group(1)
     return jwt
@@ -31,13 +26,10 @@ def get_current_weather(jwt, location=LOCATION_ID):
     df_now["location_name"] = df_now.location.map(lambda loc: loc["name"])
     df_now["location_id"] = df_now.location.map(lambda loc: loc["id"])
     caba_ahora = df_now.loc[df_now.location_id == location]
-    return caba_ahora    
+    return caba_ahora
 
-def run_etl():
+def get_current_weather_and_forecast():
     jwt = get_jwt_token()
-    
     forecast_df = get_forecast(jwt)
     current_weather = get_current_weather(jwt)
-    # TODO: convert forecast_df rows to the models
-    
-    # TODO: convert to model
+    return current_weather, forecast_df
