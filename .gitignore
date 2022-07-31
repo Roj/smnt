@@ -1,0 +1,7 @@
+.ipynb_checkpoints
+*.ipynb
+*.cfg
+*.db
+__pycache__
+logs
+smnt/webserver_config.py
