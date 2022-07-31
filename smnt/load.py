@@ -1,8 +1,13 @@
+import datetime
 from smnt.models import DayPrediction, ActualWeather, PeriodPrediction
+from smnt.config import LOCATION_ID
+from sqlalchemy.orm import Session
+from smnt.database import Session
+
 def actual_weather_from_row(caba_ahora):
 
     return ActualWeather(
-        datehour = caba_ahora.date,
+        datehour = datetime.datetime.fromisoformat(caba_ahora.date),
         humidity = caba_ahora.humidity,
         pressure = caba_ahora.pressure,
         feels_like = caba_ahora.feels_like,
@@ -22,11 +27,11 @@ def period_preds_from_row(row, datehour):
     for period_name in ["early_morning", "morning", "afternoon", "night"]:
         period = getattr(row, period_name)
         if period is None:
-            period_preds.append(None)
+            #period_preds.append(None)
             continue
         period_pred = PeriodPrediction(
             datetime=datehour,
-            predicted_date=row.date,
+            predicted_date=datetime.date.fromisoformat(row.date),
             period_name=period_name,
             #day_prediction_id = ??,
             humidity=period["humidity"],
@@ -37,26 +42,40 @@ def period_preds_from_row(row, datehour):
             gust_range_max=0 if period["gust_range"] is None else period["gust_range"][1],
             weather_description=period["weather"]["description"],
             weather_description_id=period["weather"]["id"],
-            wind_direction=period["wind"]["direction"], 
-            wind_degrees=period["wind"]["deg"], 
-            wind_speed_min=period["wind"]["speed_range"][0], 
-            wind_speed_max=period["wind"]["speed_range"][1], 
+            wind_direction=period["wind"]["direction"],
+            wind_degrees=period["wind"]["deg"],
+            wind_speed_min=period["wind"]["speed_range"][0],
+            wind_speed_max=period["wind"]["speed_range"][1],
         )
         period_preds.append(period_pred)
     return period_preds
 
 def day_pred_from_row(row, datehour, location_id):
     period_preds = period_preds_from_row(row, datehour)
-    return DayPrediction(
+    day_pred = DayPrediction(
         datetime=datehour,
         location_id=location_id,
-        predicted_date=row.date,
+        predicted_date=datetime.date.fromisoformat(row.date),
         temperature_min=row.temp_min,
         temperature_max=row.temp_max,
         humidity_min=row.humidity_min,
         humidity_max=row.humidity_max,
-        early_morning=period_preds[0],
-        morning=period_preds[1],
-        afternoon=period_preds[2],
-        night=period_preds[3],
     )
+    if period_preds:
+        day_pred.period_predictions.extend(period_preds)
+    return day_pred
+
+def load(current_weather, forecast):
+    actual_weather_obj = actual_weather_from_row(current_weather.iloc[0])
+
+    forecast_objects = []
+    now = datetime.datetime.now()
+    now_datehour = datetime.datetime(now.year, now.month, now.day, now.hour)
+    for row in forecast.itertuples():
+        forecast_objects.append(day_pred_from_row(row, now_datehour, LOCATION_ID))
+
+    with Session() as session:
+        for obj in forecast_objects:
+            session.add(obj)
+        session.add(actual_weather_obj)
+        session.commit()
