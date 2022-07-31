@@ -1,10 +1,15 @@
-from sqlalchemy import Column, Integer, Float, DateTime, Date, String, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+"""SQLAlchemy models"""
+# pylint: disable=too-few-public-methods
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Date, Float, Column, String, Integer, DateTime, ForeignKey
+
 Base = declarative_base()
+
 
 class PeriodPrediction(Base):
     """A prediction for a single period (early morning, morning, ...)"""
+
     __tablename__ = "period_prediction"
     id = Column(Integer, primary_key=True)
     # Identifying info
@@ -27,8 +32,10 @@ class PeriodPrediction(Base):
     wind_speed_min = Column(Float)
     wind_speed_max = Column(Float)
 
+
 class DayPrediction(Base):
     """A prediction for a whole day, including its periods predictions"""
+
     __tablename__ = "day_prediction"
     id = Column(Integer, primary_key=True)
     datetime = Column(DateTime)
@@ -38,11 +45,14 @@ class DayPrediction(Base):
     temperature_max = Column(Float)
     humidity_min = Column(Float)
     humidity_max = Column(Float)
-    period_predictions = relationship("PeriodPrediction", back_populates="day_prediction")
+    period_predictions = relationship(
+        "PeriodPrediction", back_populates="day_prediction"
+    )
 
 
 class ActualWeather(Base):
     """Actual weather for the datehour."""
+
     __tablename__ = "actual_weather"
     id = Column(Integer, primary_key=True)
     datehour = Column(DateTime)

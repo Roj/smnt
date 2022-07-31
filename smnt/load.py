@@ -1,11 +1,13 @@
 """Transformers and loaders to DB"""
 import datetime
 from typing import List
+
 import pandas as pd
-from smnt.models import DayPrediction, ActualWeather, PeriodPrediction
-from smnt.config import LOCATION_ID
-from sqlalchemy.orm import Session
+
 from smnt.database import Session
+from smnt.config import LOCATION_ID
+from smnt.models import ActualWeather, DayPrediction, PeriodPrediction
+
 
 def actual_weather_from_row(current_weather: pd.Series) -> ActualWeather:
     """Construct an ActualWeather object from a pandas series.
@@ -20,22 +22,25 @@ def actual_weather_from_row(current_weather: pd.Series) -> ActualWeather:
     ActualWeather
     """
     return ActualWeather(
-        datehour = datetime.datetime.fromisoformat(current_weather.date),
-        humidity = current_weather.humidity,
-        pressure = current_weather.pressure,
-        feels_like = current_weather.feels_like,
-        temperature = current_weather.temperature,
-        visibility = current_weather.visibility,
-        weather_description = current_weather.weather["description"],
-        weather_description_id = current_weather.weather["id"],
-        wind_direction = current_weather.wind["direction"],
-        wind_degrees = current_weather.wind["deg"],
-        wind_speed = current_weather.wind["speed"],
-        location_id = current_weather.location_id,
-        location_name = current_weather.location_name,
+        datehour=datetime.datetime.fromisoformat(current_weather.date),
+        humidity=current_weather.humidity,
+        pressure=current_weather.pressure,
+        feels_like=current_weather.feels_like,
+        temperature=current_weather.temperature,
+        visibility=current_weather.visibility,
+        weather_description=current_weather.weather["description"],
+        weather_description_id=current_weather.weather["id"],
+        wind_direction=current_weather.wind["direction"],
+        wind_degrees=current_weather.wind["deg"],
+        wind_speed=current_weather.wind["speed"],
+        location_id=current_weather.location_id,
+        location_name=current_weather.location_name,
     )
 
-def period_preds_from_row(row: pd.Series, datehour: datetime.datetime) -> List[PeriodPrediction]:
+
+def period_preds_from_row(
+    row: pd.Series, datehour: datetime.datetime
+) -> List[PeriodPrediction]:
     """Construct PeriodPrediction objects from a forecast row.
     Uses a contextual datehour to set the prediction time.
 
@@ -65,8 +70,12 @@ def period_preds_from_row(row: pd.Series, datehour: datetime.datetime) -> List[P
             probability_rain_min=period["rain_prob_range"][0],
             probability_rain_max=period["rain_prob_range"][1],
             temperature=period["temperature"],
-            gust_range_min=0 if period["gust_range"] is None else period["gust_range"][0],
-            gust_range_max=0 if period["gust_range"] is None else period["gust_range"][1],
+            gust_range_min=0
+            if period["gust_range"] is None
+            else period["gust_range"][0],
+            gust_range_max=0
+            if period["gust_range"] is None
+            else period["gust_range"][1],
             weather_description=period["weather"]["description"],
             weather_description_id=period["weather"]["id"],
             wind_direction=period["wind"]["direction"],
@@ -77,7 +86,10 @@ def period_preds_from_row(row: pd.Series, datehour: datetime.datetime) -> List[P
         period_preds.append(period_pred)
     return period_preds
 
-def day_pred_from_row(row: pd.Series, datehour: datetime.datetime, location_id: int) -> DayPrediction:
+
+def day_pred_from_row(
+    row: pd.Series, datehour: datetime.datetime, location_id: int
+) -> DayPrediction:
     """Generate a day prediction from a forecast row, a contextual prediction time,
     and the location id for which the prediction was made.
     Generates PeriodPredictions by cascade.
@@ -108,6 +120,7 @@ def day_pred_from_row(row: pd.Series, datehour: datetime.datetime, location_id: 
     if period_preds:
         day_pred.period_predictions.extend(period_preds)
     return day_pred
+
 
 def load(current_weather: pd.DataFrame, forecast: pd.DataFrame) -> None:
     """Create objects for scraped current weather and forecast,

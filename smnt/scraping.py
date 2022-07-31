@@ -1,9 +1,13 @@
+"""Scraping utilities for web service"""
 import re
-from typing import Dict, Tuple
-import requests
 import json
+from typing import Dict, Tuple
+
+import requests
 import pandas as pd
-from smnt.config import LOCATION_ID, FORECAST_URL, WEATHER_URL, JWT_URL
+
+from smnt.config import JWT_URL, LOCATION_ID, WEATHER_URL, FORECAST_URL
+
 
 def get_jwt_token() -> str:
     """Request a JWT token from the service.
@@ -15,9 +19,13 @@ def get_jwt_token() -> str:
         JSON Web Token (JWT).
     """
     html_pronostico = requests.get(JWT_URL).content
-    obj = re.search("localStorage\.setItem\('token', '([A-z0-9\.\-]+)'\);", html_pronostico.decode("utf-8"))
+    obj = re.search(
+        r"localStorage\.setItem\('token', '([A-z0-9\.\-]+)'\);",
+        html_pronostico.decode("utf-8"),
+    )
     jwt = obj.group(1)
     return jwt
+
 
 def query_endpoint_with_jwt(endpoint: str, jwt: str) -> Dict:
     """Generic GET request with a JSON Web Token.
@@ -36,8 +44,11 @@ def query_endpoint_with_jwt(endpoint: str, jwt: str) -> Dict:
         Loaded JSON response.
     """
     auth_header = f"JWT {jwt}"
-    response = requests.get(endpoint, headers={"Authorization": auth_header, "Accept": "application/json"})
+    response = requests.get(
+        endpoint, headers={"Authorization": auth_header, "Accept": "application/json"}
+    )
     return json.loads(response.content.decode("utf-8"))
+
 
 def get_forecast(jwt: str) -> pd.DataFrame:
     """Get forecast dataframe.
@@ -56,7 +67,8 @@ def get_forecast(jwt: str) -> pd.DataFrame:
     forecast_df = pd.DataFrame(forecast_data["forecast"])
     return forecast_df
 
-def get_current_weather(jwt: str, location: int=LOCATION_ID)->pd.DataFrame:
+
+def get_current_weather(jwt: str, location: int = LOCATION_ID) -> pd.DataFrame:
     """Get current weather for given location.
 
     Parameters
@@ -77,6 +89,7 @@ def get_current_weather(jwt: str, location: int=LOCATION_ID)->pd.DataFrame:
     df_now["location_id"] = df_now.location.map(lambda loc: loc["id"])
     caba_ahora = df_now.loc[df_now.location_id == location]
     return caba_ahora
+
 
 def get_current_weather_and_forecast() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Wrapper that obtains both current weather and forecast.
