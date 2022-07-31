@@ -28,7 +28,7 @@ def run_etl():
     # TODO: convert forecast_df rows to the models
 
     now = query_endpoint_with_jwt(WEATHER_URL, jwt)
-    df_now = pd.DataFrame(json.loads(now.content.decode("utf-8")))
+    df_now = pd.DataFrame(now.content)
     df_now["location_name"] = df_now.location.map(lambda loc: loc["name"])
     df_now["location_id"] = df_now.location.map(lambda loc: loc["id"])
     caba_ahora = df_now.loc[df_now.location_id == 10821]

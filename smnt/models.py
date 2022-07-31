@@ -1,14 +1,15 @@
-from sqlalchemy import Column, Integer, Float, DateTime, Date, String, ForeignKey, declarative_base
-
+from sqlalchemy import Column, Integer, Float, DateTime, Date, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 class PeriodPrediction(Base):
     __tablename__ = "period_prediction"
+    id = Column(Integer, primary_key=True)
     # Identifying info
     datetime = Column(DateTime)
     predicted_date = Column(Date)
     period_name = Column(String)
-    prediction_id = Column(Integer, primary_key=True)
+    day_prediction_id = Column(Integer, ForeignKey("day_prediction.id"))
     # Values
     humidity = Column(Float)
     probability_rain_min = Column(Float)
@@ -25,6 +26,7 @@ class PeriodPrediction(Base):
 
 class DayPrediction(Base):
     __tablename__ = "day_prediction"
+    id = Column(Integer, primary_key=True)
     datetime = Column(DateTime)
     location_id = Column(Integer)
     predicted_date = Column(Date)
@@ -32,14 +34,15 @@ class DayPrediction(Base):
     temperature_max = Column(Float)
     humidity_min = Column(Float)
     humidity_max = Column(Float)
-    early_morning = Column(Integer, ForeignKey("period_prediction.prediction_id"))
-    morning = Column(Integer, ForeignKey("period_prediction.prediction_id"))
-    afternoon = Column(Integer, ForeignKey("period_prediction.prediction_id"))
-    night = Column(Integer, ForeignKey("period_prediction.prediction_id"))
+    early_morning = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
+    morning = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
+    afternoon = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
+    night = relationship("PeriodPrediction", back_populates="day_prediction", uselist=False)
 
 
 class ActualWeather(Base):
     __tablename__ = "actual_weather"
+    id = Column(Integer, primary_key=True)
     datehour = Column(DateTime)
     humidity = Column(Float)
     pressure = Column(Float)
