@@ -11,6 +11,9 @@ pandas = "^1.4.3"
 requests = "^2.28.1"
 ipykernel = "^6.15.1"
 SQLAlchemy = "^1.4.39"
+prefect = "<2"
+apache-airflow = "^2.3.3"
+psycopg2 = "^2.9.3"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.14.4"

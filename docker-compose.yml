@@ -1,0 +1,62 @@
+services:
+  airflowdb:
+    image: postgres:10.5
+    environment:
+        POSTGRES_USER: airflow
+        POSTGRES_PASSWORD: airflow
+        POSTGRES_DB: airflow
+        POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+        TZ: UTC
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+    volumes:
+        - /var/lib/postgresql/data/
+  airflow-webserver:
+    build: .
+    environment:
+      POSTGRES_HOST: airflowdb
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@airflowdb:5432/airflow"
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW_HOME: /smnt/smnt/
+    depends_on:
+      airflowdb:
+        condition: service_healthy
+    command: bash -c "
+      poetry run airflow db init
+      && poetry run airflow users create --username admin -p admin --firstname Admin --lastname admin --role Admin --email admin@example.org;
+      poetry run airflow webserver"
+    healthcheck:
+      test: ["CMD",  "wget",  "--no-verbose",  "--tries=1", "--spider", "http://localhost:8080/health", "|| exit 1"]
+      interval: 15s
+      timeout: 20s
+      retries: 10
+    ports:
+      - 0.0.0.0:8090:8080
+  airflow-scheduler:
+    build: .
+    command: "poetry run airflow scheduler"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@airflowdb:5432/airflow"
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW_HOME: /smnt/smnt/
+
+    depends_on:
+      airflowdb:
+        condition: service_healthy
+    volumes:
+      - .:/smnt/
+      - ./smnt/dags:/opt/airflow/dags
+
+version: '3.7'
+
